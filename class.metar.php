@@ -3,23 +3,29 @@
 /**
  * Example:
  *   $metar = new metar('KARB 152053Z 10007KT 6SM -RA OVC019 04/01 A3006 RMK AO2 SLP187 P0000 60000 T00390006 56024');
- *   echo $metar->raw_text . ': ' . $metar->flight_category . "\n";
+ *   echo $metar->raw_text . ': ' . $metar->flightCategoryGet() . "\n";
  */
 
 class metar
 {
+	// public properties
 	public $raw_text;
 	public $station_id;
 	public $observation_time;
 	public $visibility_statute_mi;
 	public $cloud_ceiling;
-	public $flight_category;
 
+	// array to store the metar code patterns
 	private $metarCodePatterns = array(
 		"visibility_statute_mi"   => "(\d+)SM",
 		"clouds"                  => "SKC|CLR|NSC|((FEW|SCT|BKN|OVC)(\d{3}))",
 	);
 
+	/**
+	 * Constructor
+	 *
+	 * @param string $metar the raw metar text
+	 */
 	function __construct($metar)
 	{
 		$this->raw_text = $metar;
@@ -58,23 +64,32 @@ class metar
 				}
 			}
 		}
+	}
 
-		// calculate the flight category - based on information from http://aviationweather.gov/static/info/afc.html
+	/**
+	 * Calculate the flight category
+	 *
+	 * NOTE: based on information from http://aviationweather.gov/static/info/afc.html
+	 *
+	 * @return string one of the following categories: VFR, MVFR, IFR, LIFR
+	 */
+	public function flightCategoryGet()
+	{
 		if ($this->visibility_statute_mi > 5 && ($this->cloud_ceiling === null | $this->cloud_ceiling > 30))
 		{
-			$this->flight_category = 'VFR';
+			return 'VFR';
 		}
 		elseif ($this->visibility_statute_mi >= 3 && $this->cloud_ceiling >= 10)
 		{
-			$this->flight_category = 'MVFR';
+			return 'MVFR';
 		}
 		elseif ($this->visibility_statute_mi >= 1 && $this->cloud_ceiling >= 5)
 		{
-			$this->flight_category = 'IFR';
+			return 'IFR';
 		}
 		else
 		{
-			$this->flight_category = 'LIFR';
+			return 'LIFR';
 		}
 	}
 }
